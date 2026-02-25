@@ -44,17 +44,11 @@ jobs:
               "$file"
           done
 
-      - name: Configure Git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit and push static files
-        run: |
-          git add ./static
-          if git diff --staged --quiet; then
-            echo "✅ No changes detected — site is up to date"
-          else
-            git commit -m "🚀 Static deploy: $(date -u '+%Y-%m-%d %H:%M UTC')"
-            git push
-          fi
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: superfinish-static
+          directory: static/superfinish.be
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
