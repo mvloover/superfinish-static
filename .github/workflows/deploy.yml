@@ -49,7 +49,25 @@ jobs:
               "$file"
           done
 
-      - name: Fix URL-encoded asset filenames (rename %3F files to base names)
+      - name: Fix broken navigation links in HTML
+        run: |
+          find ./static -name "*.html" | while IFS= read -r file; do
+            sed -i \
+              -e 's|href="index\.html%3Fp=88\.html"|href="/wat-is-cerakote/"|g' \
+              -e 's|href="index\.html?p=88\.html"|href="/wat-is-cerakote/"|g' \
+              -e 's|href="index\.html%3Fp=198\.html"|href="/projecten/"|g' \
+              -e 's|href="index\.html?p=198\.html"|href="/projecten/"|g' \
+              -e 's|href="index\.html%3Fp=362\.html"|href="/we-coat-your-parts/"|g' \
+              -e 's|href="index\.html?p=362\.html"|href="/we-coat-your-parts/"|g' \
+              -e 's|href="index\.html%3Fp=406\.html"|href="/we-blast-your-parts/"|g' \
+              -e 's|href="index\.html?p=406\.html"|href="/we-blast-your-parts/"|g' \
+              -e 's|href="index\.html%3Fp=86\.html"|href="/contacteer-ons/"|g' \
+              -e 's|href="index\.html?p=86\.html"|href="/contacteer-ons/"|g' \
+              "$file"
+          done
+          echo "Navigation link fix complete"
+
+      - name: Rename versioned asset files to base names (handles both ? and %3F)
         run: |
           python3 << 'EOF'
           import os
@@ -57,36 +75,21 @@ jobs:
           count = 0
           for root, dirs, files in os.walk('./static'):
               for f in files:
-                  if '%3F' in f:
-                      old_path = os.path.join(root, f)
-                      new_name = f.split('%3F')[0]
-                      new_path = os.path.join(root, new_name)
-                      if new_name and old_path != new_path:
-                          print(f"Renaming: {f} -> {new_name}")
-                          os.rename(old_path, new_path)
-                          count += 1
+                  if '?' in f:
+                      sep = '?'
+                  elif '%3F' in f:
+                      sep = '%3F'
+                  else:
+                      continue
+                  old_path = os.path.join(root, f)
+                  new_name = f.split(sep)[0]
+                  new_path = os.path.join(root, new_name)
+                  if new_name and old_path != new_path and not os.path.exists(new_path):
+                      print(f"Renaming: {f} -> {new_name}")
+                      os.rename(old_path, new_path)
+                      count += 1
           print(f"Done — {count} files renamed")
           EOF
-
-      - name: Strip %3F version strings from HTML src/href attributes
-        run: |
-          find ./static -name "*.html" | while IFS= read -r file; do
-            sed -i 's/%3F[^"'"'"' >]*//g' "$file"
-          done
-          echo "HTML attribute cleanup complete"
-
-      - name: Fix broken navigation links in HTML
-        run: |
-          find ./static -name "*.html" | while IFS= read -r file; do
-            sed -i \
-              -e 's|href="index\.html%3Fp=88\.html"|href="/wat-is-cerakote/"|g' \
-              -e 's|href="index\.html%3Fp=198\.html"|href="/projecten/"|g' \
-              -e 's|href="index\.html%3Fp=362\.html"|href="/we-coat-your-parts/"|g' \
-              -e 's|href="index\.html%3Fp=406\.html"|href="/we-blast-your-parts/"|g' \
-              -e 's|href="index\.html%3Fp=86\.html"|href="/contacteer-ons/"|g' \
-              "$file"
-          done
-          echo "Navigation link fix complete"
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
