@@ -89,10 +89,8 @@ jobs:
           echo "Navigation link fix complete"
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: superfinish-static
-          directory: static/superfinish.be
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy static/superfinish.be --project-name=superfinish-static
