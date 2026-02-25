@@ -30,7 +30,7 @@ jobs:
             --tries=3 \
             --timeout=30 \
             -P ./static \
-            https://superfinish.be/
+            https://superfinish.be/ || EXIT=$?; [ "${EXIT:-0}" -le 8 ] && true
 
       - name: Remove WordPress-specific links from HTML
         run: |
