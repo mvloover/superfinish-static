@@ -17,6 +17,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Point superfinish.be directly to WordPress origin (bypass Cloudflare Pages)
+        run: echo "5.75.216.198 superfinish.be" | sudo tee -a /etc/hosts
+
       - name: Crawl WordPress site with wget
         run: |
           wget \
@@ -26,6 +29,7 @@ jobs:
             --page-requisites \
             --no-parent \
             --no-verbose \
+            --no-check-certificate \
             --reject "wp-login.php,wp-cron.php,xmlrpc.php,wp-signup.php" \
             --exclude-directories="/wp-admin,/wp-json,/wp-includes/js/tinymce" \
             --tries=3 \
