@@ -75,6 +75,10 @@ jobs:
               -e 's|src="wp-includes/|src="/wp-includes/|g' \
               -e 's|href="wp-content/|href="/wp-content/|g' \
               -e 's|href="wp-includes/|href="/wp-includes/|g' \
+              -e "s|src='wp-content/|src='/wp-content/|g" \
+              -e "s|src='wp-includes/|src='/wp-includes/|g" \
+              -e "s|href='wp-content/|href='/wp-content/|g" \
+              -e "s|href='wp-includes/|href='/wp-includes/|g" \
               "$file"
           done
           echo "Asset path fix complete"
