@@ -55,19 +55,19 @@ jobs:
             sed -i \
               -e 's|href="index\.html%3Fp=88\.html"|href="/wat-is-cerakote/"|g' \
               -e 's|href="index\.html?p=88\.html"|href="/wat-is-cerakote/"|g' \
-              -e 's|href="index\.html%3Fp=198\.html"|href="/projecten/"|g' \
-              -e 's|href="index\.html?p=198\.html"|href="/projecten/"|g' \
-              -e 's|href="index\.html%3Fp=362\.html"|href="/we-coat-your-parts/"|g' \
-              -e 's|href="index\.html?p=362\.html"|href="/we-coat-your-parts/"|g' \
-              -e 's|href="index\.html%3Fp=406\.html"|href="/we-blast-your-parts/"|g' \
-              -e 's|href="index\.html?p=406\.html"|href="/we-blast-your-parts/"|g' \
+              -e 's|href="index\.html%3Fp=198\.html"|href="/intropagina-2/"|g' \
+              -e 's|href="index\.html?p=198\.html"|href="/intropagina-2/"|g' \
+              -e 's|href="index\.html%3Fp=362\.html"|href="/cerakoat-jobs/"|g' \
+              -e 's|href="index\.html?p=362\.html"|href="/cerakoat-jobs/"|g' \
+              -e 's|href="index\.html%3Fp=406\.html"|href="/cerakoat-jobs-2/"|g' \
+              -e 's|href="index\.html?p=406\.html"|href="/cerakoat-jobs-2/"|g' \
               -e 's|href="index\.html%3Fp=86\.html"|href="/contacteer-ons/"|g' \
               -e 's|href="index\.html?p=86\.html"|href="/contacteer-ons/"|g' \
               "$file"
           done
           echo "Navigation link fix complete"
 
-      - name: Fix asset paths to be root-relative (fixes CSS/JS on subpages)
+      - name: Fix asset paths to be root-relative (fixes CSS/JS on all pages)
         run: |
           find ./static -name "*.html" | while IFS= read -r file; do
             sed -i \
@@ -79,6 +79,18 @@ jobs:
               -e "s|src='wp-includes/|src='/wp-includes/|g" \
               -e "s|href='wp-content/|href='/wp-content/|g" \
               -e "s|href='wp-includes/|href='/wp-includes/|g" \
+              -e 's|src="\.\./wp-content/|src="/wp-content/|g' \
+              -e 's|src="\.\./wp-includes/|src="/wp-includes/|g' \
+              -e 's|href="\.\./wp-content/|href="/wp-content/|g' \
+              -e 's|href="\.\./wp-includes/|href="/wp-includes/|g' \
+              -e "s|src='../wp-content/|src='/wp-content/|g" \
+              -e "s|src='../wp-includes/|src='/wp-includes/|g" \
+              -e "s|href='../wp-content/|href='/wp-content/|g" \
+              -e "s|href='../wp-includes/|href='/wp-includes/|g" \
+              -e 's|src="\.\./\.\./wp-content/|src="/wp-content/|g' \
+              -e 's|href="\.\./\.\./wp-content/|href="/wp-content/|g' \
+              -e "s|src='../../wp-content/|src='/wp-content/|g" \
+              -e "s|href='../../wp-content/|href='/wp-content/|g" \
               "$file"
           done
           echo "Asset path fix complete"
