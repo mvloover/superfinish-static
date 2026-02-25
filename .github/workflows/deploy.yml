@@ -67,67 +67,19 @@ jobs:
           done
           echo "Navigation link fix complete"
 
-      - name: Fix asset paths to be root-relative (fixes CSS/JS/images on all pages)
+      - name: Fix asset paths to be root-relative (fixes src, href, srcset on all pages)
         run: |
           find ./static -name "*.html" | while IFS= read -r file; do
-            python3 - "$file" << 'PYEOF'
-import sys, re
-
-path = sys.argv[1]
-with open(path, 'r', encoding='utf-8', errors='replace') as f:
-    html = f.read()
-
-# Replace all relative wp-content/wp-includes paths with root-relative ones
-# Handles: src=, href=, srcset=, with " or ' quotes, with ../ and ../../ prefixes
-def fix_wp_paths(html):
-    def replace_attr(m):
-        attr = m.group(1)   # e.g. src, href, srcset
-        quote = m.group(2)  # " or '
-        value = m.group(3)  # the URL value
-        # Strip leading ../ sequences
-        clean = re.sub(r'^(\.\./)+', '', value)
-        # Add leading / if starts with wp-content or wp-includes
-        if clean.startswith('wp-content/') or clean.startswith('wp-includes/'):
-            clean = '/' + clean
-        return f'{attr}={quote}{clean}'
-
-    # Match src=, href=, srcset= attributes
-    pattern = r'(src|href|srcset)=(["\'])(\.\./)*wp-(content|includes)/[^"\'\s>]+'
-    # We need to capture the full value for srcset (which can have multiple URLs)
-    # Process srcset separately because it has multiple space-separated values
-    def fix_srcset(m):
-        quote = m.group(1)
-        value = m.group(2)
-        # Each entry in srcset is "url widthDescriptor"
-        parts = value.split(',')
-        fixed_parts = []
-        for part in parts:
-            part = part.strip()
-            sub = part.split(' ', 1)
-            url = re.sub(r'^(\.\./)+', '', sub[0])
-            if url.startswith('wp-content/') or url.startswith('wp-includes/'):
-                url = '/' + url
-            fixed_parts.append(url + (' ' + sub[1] if len(sub) > 1 else ''))
-        return f'srcset={quote}' + ', '.join(fixed_parts) + quote
-
-    # Fix srcset first
-    html = re.sub(r'srcset=(["\'])((?:(?:\.\./)*wp-(?:content|includes)/[^"\'\s>]+(?:\s+\d+[wx])?,?\s*)+)\1',
-                  fix_srcset, html)
-
-    # Fix src= and href= with ../ prefix
-    html = re.sub(r'(src|href)=(["\'])(\.\./)+wp-(content|includes)/',
-                  lambda m: f'{m.group(1)}={m.group(2)}/wp-{m.group(4)}/', html)
-
-    # Fix src= and href= without prefix (relative, no leading /)
-    html = re.sub(r'(src|href)=(["\'])wp-(content|includes)/',
-                  lambda m: f'{m.group(1)}={m.group(2)}/wp-{m.group(3)}/', html)
-
-    return html
-
-fixed = fix_wp_paths(html)
-with open(path, 'w', encoding='utf-8') as f:
-    f.write(fixed)
-PYEOF
+            sed -i \
+              -e 's|\.\./\.\./wp-content/|/wp-content/|g' \
+              -e 's|\.\./\.\./wp-includes/|/wp-includes/|g' \
+              -e 's|\.\./wp-content/|/wp-content/|g' \
+              -e 's|\.\./wp-includes/|/wp-includes/|g' \
+              -e 's|"wp-content/|"/wp-content/|g' \
+              -e 's|"wp-includes/|"/wp-includes/|g' \
+              -e "s|'wp-content/|'/wp-content/|g" \
+              -e "s|'wp-includes/|'/wp-includes/|g" \
+              "$file"
           done
           echo "Asset path fix complete"
 
