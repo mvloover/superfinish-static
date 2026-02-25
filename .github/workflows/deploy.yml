@@ -45,6 +45,31 @@ jobs:
               "$file"
           done
 
+      - name: Fix URL-encoded asset filenames (rename %3F files to base names)
+        run: |
+          find ./static -name "*%3F*" | while IFS= read -r f; do
+            dir=$(dirname "$f")
+            filename=$(basename "$f")
+            newname=$(echo "$filename" | sed 's/%3F.*//')
+            if [ -n "$newname" ] && [ "$filename" != "$newname" ]; then
+              mv "$f" "$dir/$newname"
+            fi
+          done
+          echo "Asset renaming complete"
+
+      - name: Fix broken navigation links in HTML
+        run: |
+          find ./static -name "*.html" | while IFS= read -r file; do
+            sed -i \
+              -e 's|href="index\.html%3Fp=88\.html"|href="/wat-is-cerakote/"|g' \
+              -e 's|href="index\.html%3Fp=198\.html"|href="/projecten/"|g' \
+              -e 's|href="index\.html%3Fp=362\.html"|href="/we-coat-your-parts/"|g' \
+              -e 's|href="index\.html%3Fp=406\.html"|href="/we-blast-your-parts/"|g' \
+              -e 's|href="index\.html%3Fp=86\.html"|href="/contacteer-ons/"|g' \
+              "$file"
+          done
+          echo "Navigation link fix complete"
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
