@@ -1,0 +1,60 @@
+name: Deploy Superfinish Static Site
+
+on:
+  repository_dispatch:
+    types: [wordpress-publish]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Crawl WordPress site with wget
+        run: |
+          wget \
+            --mirror \
+            --convert-links \
+            --adjust-extension \
+            --page-requisites \
+            --no-parent \
+            --no-verbose \
+            --reject "wp-login.php,wp-cron.php,xmlrpc.php,wp-signup.php" \
+            --exclude-directories="/wp-admin,/wp-json,/wp-includes/js/tinymce" \
+            --tries=3 \
+            --timeout=30 \
+            -P ./static \
+            https://superfinish.be/
+
+      - name: Remove WordPress-specific links from HTML
+        run: |
+          find ./static -name "*.html" | while read file; do
+            sed -i \
+              -e 's|href="[^"]*wp-admin[^"]*"||g' \
+              -e 's|href="[^"]*wp-login[^"]*"||g' \
+              -e 's|href="[^"]*xmlrpc\.php[^"]*"||g' \
+              -e 's|action="[^"]*wp-admin[^"]*"||g' \
+              -e 's|action="[^"]*wp-login[^"]*"||g' \
+              "$file"
+          done
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push static files
+        run: |
+          git add ./static
+          if git diff --staged --quiet; then
+            echo "✅ No changes detected — site is up to date"
+          else
+            git commit -m "🚀 Static deploy: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
