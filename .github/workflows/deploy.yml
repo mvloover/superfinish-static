@@ -51,15 +51,29 @@ jobs:
 
       - name: Fix URL-encoded asset filenames (rename %3F files to base names)
         run: |
-          find ./static -name "*%3F*" | while IFS= read -r f; do
-            dir=$(dirname "$f")
-            filename=$(basename "$f")
-            newname=$(echo "$filename" | sed 's/%3F.*//')
-            if [ -n "$newname" ] && [ "$filename" != "$newname" ]; then
-              mv "$f" "$dir/$newname"
-            fi
+          python3 << 'EOF'
+          import os
+
+          count = 0
+          for root, dirs, files in os.walk('./static'):
+              for f in files:
+                  if '%3F' in f:
+                      old_path = os.path.join(root, f)
+                      new_name = f.split('%3F')[0]
+                      new_path = os.path.join(root, new_name)
+                      if new_name and old_path != new_path:
+                          print(f"Renaming: {f} -> {new_name}")
+                          os.rename(old_path, new_path)
+                          count += 1
+          print(f"Done — {count} files renamed")
+          EOF
+
+      - name: Strip %3F version strings from HTML src/href attributes
+        run: |
+          find ./static -name "*.html" | while IFS= read -r file; do
+            sed -i 's/%3F[^"'"'"' >]*//g' "$file"
           done
-          echo "Asset renaming complete"
+          echo "HTML attribute cleanup complete"
 
       - name: Fix broken navigation links in HTML
         run: |
