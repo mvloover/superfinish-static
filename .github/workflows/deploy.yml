@@ -67,6 +67,18 @@ jobs:
           done
           echo "Navigation link fix complete"
 
+      - name: Fix asset paths to be root-relative (fixes CSS/JS on subpages)
+        run: |
+          find ./static -name "*.html" | while IFS= read -r file; do
+            sed -i \
+              -e 's|src="wp-content/|src="/wp-content/|g' \
+              -e 's|src="wp-includes/|src="/wp-includes/|g' \
+              -e 's|href="wp-content/|href="/wp-content/|g' \
+              -e 's|href="wp-includes/|href="/wp-includes/|g' \
+              "$file"
+          done
+          echo "Asset path fix complete"
+
       - name: Rename versioned asset files to base names (handles both ? and %3F)
         run: |
           python3 << 'EOF'
